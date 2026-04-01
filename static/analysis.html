@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizler - HydroAI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="top-section">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <span>HydroAI</span>
+                </div>
+                <nav class="menu">
+                    <ul>
+                        <li><a href="/"><i class="fas fa-home"></i> Ana Panel</a></li>
+                        <li><a href="/analysis" class="active"><i class="fas fa-chart-line"></i> Analizler</a></li>
+                        <li><a href="/history"><i class="fas fa-history"></i> Geçmiş Kayıtlar</a></li>
+                        <li><a href="/settings"><i class="fas fa-cog"></i> Sistem Ayarları</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="system-status">
+                <div class="status-item"><span>Server</span>
+                    <div class="dot active"></div>
+                </div>
+                <div class="status-item"><span>Kamera</span>
+                    <div class="dot active"></div>
+                </div>
+                <div class="status-item"><span>Jetson Al</span>
+                    <div class="dot"></div>
+                </div>
+                <small style="color: #64748b; margin-top: 10px; display: block;">v1.0.2 Stable</small>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div>
+                    <h1>Analizler</h1>
+                    <p style="color: #94a3b8;">Sistem Performansı ve Bitki Gelişim Grafikleri</p>
+                </div>
+            </header>
+
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                <!-- pH & EC Chart -->
+                <div class="card" style="height: 400px;">
+                    <h3>Su Değerleri (Son 24 Saat)</h3>
+                    <canvas id="waterChart"></canvas>
+                </div>
+
+                <!-- Growth Chart -->
+                <div class="card" style="height: 400px;">
+                    <h3>Bitki Gelişimi (Haftalık)</h3>
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <h3>Sistem Verimliliği</h3>
+                <div style="display: flex; justify-content: space-around; padding: 20px; text-align: center;">
+                    <div>
+                        <div style="font-size: 2rem; color: var(--primary);">98%</div>
+                        <div style="color: var(--text-muted);">Sensör Doğruluğu</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 2rem; color: #3b82f6;">14.2 L</div>
+                        <div style="color: var(--text-muted);">Su Tüketimi (Günlük)</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 2rem; color: #f59e0b;">12 Saat</div>
+                        <div style="color: var(--text-muted);">Aktif Işık Süresi</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Water Parameters Chart
+        const ctxWater = document.getElementById('waterChart').getContext('2d');
+        new Chart(ctxWater, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    label: 'pH',
+                    data: [6.0, 5.9, 5.8, 6.1, 6.2, 6.0],
+                    borderColor: '#4ade80',
+                    tension: 0.4
+                }, {
+                    label: 'EC (mS/cm)',
+                    data: [1.2, 1.3, 1.2, 1.4, 1.5, 1.4],
+                    borderColor: '#3b82f6',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+
+        // Growth Chart
+        const ctxGrowth = document.getElementById('growthChart').getContext('2d');
+        new Chart(ctxGrowth, {
+            type: 'bar',
+            data: {
+                labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+                datasets: [{
+                    label: 'Ortalama Yaprak Alanı (cm²)',
+                    data: [12, 15, 18, 22, 25, 29, 32],
+                    backgroundColor: 'rgba(74, 222, 128, 0.5)',
+                    borderColor: '#4ade80',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

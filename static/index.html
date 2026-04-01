@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidroponik AI Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Ekstra grafik stilleri */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="top-section">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <span>HydroAI</span>
+                </div>
+
+                <nav class="menu">
+                    <ul>
+                        <li><a href="#" class="active"><i class="fas fa-home"></i> Ana Panel</a></li>
+                        <li><a href="/analysis"><i class="fas fa-chart-line"></i> Analizler</a></li>
+                        <li><a href="/history"><i class="fas fa-history"></i> Geçmiş Kayıtlar</a></li>
+                        <li><a href="/settings"><i class="fas fa-cog"></i> Sistem Ayarları</a></li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="system-status">
+                <div class="status-item">
+                    <span>Server</span>
+                    <div class="dot active" id="server-status"></div>
+                </div>
+                <div class="status-item">
+                    <span>Kamera</span>
+                    <div class="dot active" id="cam-status"></div>
+                </div>
+                <div class="status-item">
+                    <span>Jetson Al</span>
+                    <div class="dot" id="jetson-status"></div>
+                </div>
+                <small style="color: #64748b; margin-top: 10px; display: block;">v1.0.2 Stable</small>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <header class="header">
+                <div>
+                    <h1>Genel Bakış</h1>
+                    <p style="color: #94a3b8;">Sera Durumu ve Yapay Zeka Analizi</p>
+                </div>
+                <div class="actions">
+                    <button class="connect-btn" onclick="document.getElementById('file-upload').click()">
+                        <i class="fas fa-camera"></i> Görüntü Analiz Et
+                    </button>
+                    <input type="file" id="file-upload" accept="image/*" style="display: none;">
+                </div>
+            </header>
+
+            <!-- Sensor Cards -->
+            <div class="grid-sensors">
+                <div class="card">
+                    <h3>pH Seviyesi</h3>
+                    <div class="value" id="ph-val">-</div>
+                    <div class="unit">pH</div>
+                    <i class="fas fa-flask"
+                        style="position: absolute; right: 20px; bottom: 20px; font-size: 2rem; opacity: 0.1;"></i>
+                </div>
+
+                <div class="card">
+                    <h3>İletkenlik (EC)</h3>
+                    <div class="value" id="ec-val">-</div>
+                    <div class="unit">mS/cm</div>
+                    <i class="fas fa-bolt"
+                        style="position: absolute; right: 20px; bottom: 20px; font-size: 2rem; opacity: 0.1;"></i>
+                </div>
+
+                <div class="card">
+                    <h3>Sıcaklık</h3>
+                    <div class="value" id="temp-val">-</div>
+                    <div class="unit">°C</div>
+                    <i class="fas fa-thermometer-half"
+                        style="position: absolute; right: 20px; bottom: 20px; font-size: 2rem; opacity: 0.1;"></i>
+                </div>
+
+                <div class="card">
+                    <h3>Ortam Nemi</h3>
+                    <div class="value" id="hum-val">-</div>
+                    <div class="unit">%</div>
+                    <i class="fas fa-cloud"
+                        style="position: absolute; right: 20px; bottom: 20px; font-size: 2rem; opacity: 0.1;"></i>
+                </div>
+            </div>
+
+            <!-- Vision Section -->
+            <div class="vision-section">
+                <!-- Camera Feed -->
+                    <div class="camera-feed">
+                        <div class="camera-overlay">CANLI İZLEME</div>
+                        <img id="camera-feed-img" 
+                            src="/api/video_feed" 
+                            alt="Canlı Kamera Yayını" 
+                            style="width: 100%; height: auto; border-radius: 8px;">
+                    </div>
+
+                <!-- Analytics Sidebar -->
+                <div class="analytics-panel">
+                    <div class="card" style="height: 100%;">
+                        <h2>Tespit Sonuçları</h2>
+
+                        <div class="metric-row">
+                            <span class="metric-label">Toplam Bitki</span>
+                            <span class="metric-val" id="plant-count"
+                                style="font-size: 1.5rem; color: var(--primary);">0</span>
+                        </div>
+
+                        <div id="detection-list" style="margin-top: 20px;">
+                            <p style="color: #64748b; font-size: 0.9rem;">Henüz bir analiz yapılmadı.</p>
+                        </div>
+
+                        <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                            <div class="metric-row">
+                                <span class="metric-label">Su Seviyesi</span>
+                                <span class="metric-val" id="water-level">85%</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Pompa Durumu</span>
+                                <span class="metric-val" id="pump-status" style="color: var(--error);">PASİF</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/script.js?v=2"></script>
+</body>
+
+</html>
