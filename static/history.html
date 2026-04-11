@@ -1,57 +1,12 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geçmiş Kayıtlar - HydroAI</title>
+    <title>History - HydroAI</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css?v=2">
-    <style>
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            color: #ccc;
-        }
-
-        .history-table th,
-        .history-table td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .history-table th {
-            background-color: rgba(0, 0, 0, 0.2);
-            font-weight: 600;
-        }
-
-        .history-table tr:hover {
-            background-color: rgba(255, 255, 255, 0.02);
-        }
-
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .status-high {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-
-        .status-normal {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-        }
-
-        .status-low {
-            background: rgba(59, 130, 246, 0.2);
-            color: #3b82f6;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
@@ -65,10 +20,10 @@
                 </div>
                 <nav class="menu">
                     <ul>
-                        <li><a href="/"><i class="fas fa-home"></i> Ana Panel</a></li>
-                        <li><a href="/analysis"><i class="fas fa-chart-line"></i> Analizler</a></li>
-                        <li><a href="/history" class="active"><i class="fas fa-history"></i> Geçmiş Kayıtlar</a></li>
-                        <li><a href="/settings"><i class="fas fa-cog"></i> Sistem Ayarları</a></li>
+                        <li><a href="/"><i class="fas fa-home"></i> Dashboard</a></li>
+                        <li><a href="/analysis"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                        <li><a href="/history" class="active"><i class="fas fa-history"></i> History</a></li>
+                        <li><a href="/settings"><i class="fas fa-cog"></i> Settings</a></li>
                     </ul>
                 </nav>
             </div>
@@ -77,10 +32,10 @@
                 <div class="status-item"><span>Server</span>
                     <div class="dot active"></div>
                 </div>
-                <div class="status-item"><span>Kamera</span>
+                <div class="status-item"><span>Camera</span>
                     <div class="dot active"></div>
                 </div>
-                <div class="status-item"><span>Jetson Al</span>
+                <div class="status-item"><span>AI Engine</span>
                     <div class="dot"></div>
                 </div>
                 <small style="color: #64748b; margin-top: 10px; display: block;">v1.0.2 Stable</small>
@@ -91,12 +46,12 @@
         <main class="main-content">
             <header class="header">
                 <div>
-                    <h1>Geçmiş Kayıtlar</h1>
-                    <p style="color: #94a3b8;">Sistem Olayları ve Alarm Geçmişi</p>
+                    <h1>System History</h1>
+                    <p style="color: #94a3b8;">Events & Alert Logs</p>
                 </div>
                 <div class="actions">
-                    <button class="connect-btn" style="background: #334155;">
-                        <i class="fas fa-download"></i> CSV İndir
+                    <button class="btn btn-primary">
+                        <i class="fas fa-download"></i> Download CSV
                     </button>
                 </div>
             </header>
@@ -105,48 +60,48 @@
                 <table class="history-table">
                     <thead>
                         <tr>
-                            <th>Tarih / Saat</th>
-                            <th>Olay Tipi</th>
-                            <th>Detay</th>
-                            <th>Değer</th>
-                            <th>Durum</th>
+                            <th>Date & Time</th>
+                            <th>Event Type</th>
+                            <th>Details</th>
+                            <th>Value</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>12.02.2026 14:30</td>
-                            <td><i class="fas fa-camera text-primary"></i> Görüntü Analizi</td>
-                            <td>Bitki Sayımı Tamamlandı</td>
-                            <td>14 Adet</td>
-                            <td><span class="status-badge status-normal">NORMAL</span></td>
+                            <td>Feb 12, 2026 14:30</td>
+                            <td><i class="fas fa-camera"></i> Image Analysis</td>
+                            <td>Plant Count Completed</td>
+                            <td>14 Plants</td>
+                            <td><span class="status-badge active">NORMAL</span></td>
                         </tr>
                         <tr>
-                            <td>12.02.2026 12:15</td>
-                            <td><i class="fas fa-tint text-primary"></i> Sensör Uyarısı</td>
-                            <td>pH Değeri Düşük</td>
+                            <td>Feb 12, 2026 12:15</td>
+                            <td><i class="fas fa-tint"></i> Sensor Alert</td>
+                            <td>pH Value Low</td>
                             <td>5.4 pH</td>
-                            <td><span class="status-badge status-low">DÜŞÜK</span></td>
+                            <td><span class="status-badge inactive">LOW</span></td>
                         </tr>
                         <tr>
-                            <td>12.02.2026 09:00</td>
-                            <td><i class="fas fa-sun text-primary"></i> Otomasyon</td>
-                            <td>LED Işıklar Açıldı</td>
+                            <td>Feb 12, 2026 09:00</td>
+                            <td><i class="fas fa-sun"></i> Automation</td>
+                            <td>LED Lights Activated</td>
                             <td>100%</td>
-                            <td><span class="status-badge status-normal">BAŞARILI</span></td>
+                            <td><span class="status-badge active">SUCCESS</span></td>
                         </tr>
                         <tr>
-                            <td>11.02.2026 23:45</td>
-                            <td><i class="fas fa-wifi text-primary"></i> Bağlantı</td>
-                            <td>Jetson Nano ile Bağlantı Kesildi</td>
+                            <td>Feb 11, 2026 23:45</td>
+                            <td><i class="fas fa-wifi"></i> Connection</td>
+                            <td>Jetson Connection Lost</td>
                             <td>-</td>
-                            <td><span class="status-badge status-high">KRİTİK</span></td>
+                            <td><span class="status-badge warning">CRITICAL</span></td>
                         </tr>
                         <tr>
-                            <td>11.02.2026 20:20</td>
-                            <td><i class="fas fa-water text-primary"></i> Otomasyon</td>
-                            <td>Su Pompası Çalıştırıldı (Nem Düşük)</td>
-                            <td>3 dk</td>
-                            <td><span class="status-badge status-normal">BAŞARILI</span></td>
+                            <td>Feb 11, 2026 20:20</td>
+                            <td><i class="fas fa-water"></i> Automation</td>
+                            <td>Water Pump Activated (Low Humidity)</td>
+                            <td>3 min</td>
+                            <td><span class="status-badge active">SUCCESS</span></td>
                         </tr>
                     </tbody>
                 </table>
