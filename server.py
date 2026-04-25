@@ -1,19 +1,35 @@
 import uvicorn
-from fastapi import FastAPI, Response, UploadFile, File, Request
+from fastapi import FastAPI, Response, UploadFile, File, Request, HTTPException
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from ultralytics import YOLO
 import cv2
 import os, serial, threading, time, math, base64, numpy as np
 from datetime import datetime
 
-app = FastAPI()
-
-# --- 1. ORTAM KONTROLÜ (KRİTİK) ---
+# --- 1. ORTAM KONTROLÜ VE LİFESPAN (YENİ NESİL BAŞLATMA) ---
 # Azure Portal'da 'AZURE_CLOUD' değişkenini 'true' yaparsan bulut modu aktif olur.
 IS_CLOUD = os.getenv("AZURE_CLOUD", "false").lower() == "true"
 PORT = int(os.getenv("PORT", 8000))
+
+def start_background_tasks():
+    # Sadece bulutta DEĞİLSEK seri portu dinlemeye başla
+    if not IS_CLOUD:
+        threading.Thread(target=serial_worker, daemon=True).start()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Uygulama başlarken çalışacak kodlar (Eski on_event yerine)
+    print("✅ Sistem başlatılıyor...")
+    start_background_tasks()
+    yield
+    # Uygulama kapanırken çalışacak kodlar
+    print("❌ Sistem kapatılıyor...")
+
+# Uygulamayı yeni lifespan yapısıyla ayağa kaldır
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
@@ -33,7 +49,6 @@ latest_sensor_data = {
     "status": "BULUT MODU" if IS_CLOUD else "BAŞLATILIYOR"
 }
 
-debug_buffer = {"last_raw_line": "No data", "raw_dict": {}, "parse_errors": []}
 model = None
 model_loaded = False
 
@@ -104,9 +119,14 @@ async def update_sensors(data: dict):
         return {"status": "success"}
     return {"status": "ignored_local"}
 
+# 404 HATASINI ÇÖZEN KISIM: Arayüzden gelen frame/0 veya frame/2 isteklerini yakalar
+@app.get('/api/frame/{camera_id}')
+def get_frame(camera_id: int):
+    return StreamingResponse(gen_frames(camera_id=camera_id), media_type='multipart/x-mixed-replace; boundary=frame')
+
 @app.get('/api/video_feed')
 def video_feed():
-    # Bulutta kamera olmadığı için siyah ekran/test karesi döner
+    # Geriye dönük uyumluluk için
     return StreamingResponse(gen_frames(camera_id=0), media_type='multipart/x-mixed-replace; boundary=frame')
 
 # --- 5. KAMERA VE YOLO ---
@@ -115,7 +135,9 @@ def gen_frames(camera_id=0):
         # Bulutta kamera yok, sabit bir "Cloud Mode" karesi döndür
         while True:
             frame = np.zeros((480, 640, 3), dtype=np.uint8)
-            cv2.putText(frame, "CLOUD MODE: Waiting for Jetson...", (100, 240), 
+            cv2.putText(frame, f"CLOUD MODE - CAM {camera_id}", (100, 200), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.putText(frame, "Waiting for Jetson Nano...", (100, 240), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
             ret, buffer = cv2.imencode('.jpg', frame)
             yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
@@ -123,6 +145,17 @@ def gen_frames(camera_id=0):
     else:
         # Yerelde (Jetson) gerçek kamera akışı
         cap = cv2.VideoCapture(camera_id)
+        
+        # Kamera bağlanamazsa sistemin çökmesini engelle
+        if not cap.isOpened():
+            while True:
+                frame = np.zeros((480, 640, 3), dtype=np.uint8)
+                cv2.putText(frame, f"CAM {camera_id} ERROR", (150, 240), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+                ret, buffer = cv2.imencode('.jpg', frame)
+                yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                time.sleep(1)
+
         while True:
             success, frame = cap.read()
             if not success: break
@@ -136,11 +169,6 @@ def gen_frames(camera_id=0):
             yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
 
 # --- 6. BAŞLANGIÇ ---
-@app.on_event("startup")
-async def startup_event():
-    if not IS_CLOUD:
-        threading.Thread(target=serial_worker, daemon=True).start()
-
 @app.get("/")
 async def read_index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
@@ -148,4 +176,4 @@ async def read_index():
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    uvicorn.run("server:app", host="0.0.0.0", port=PORT, reload=False)
