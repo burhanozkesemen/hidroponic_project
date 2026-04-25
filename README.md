@@ -1,5 +1,8 @@
 # HydroAI - Hydroponic Monitoring System
 
+# portu temizlemek için
+sudo chmod 666 /dev/ttyUSB0
+
 A sophisticated AI-powered hydroponic plant monitoring system with real-time sensor data collection, computer vision analysis, and interactive web dashboard.
 
 ![Version](https://img.shields.io/badge/version-1.0.2-blue)
