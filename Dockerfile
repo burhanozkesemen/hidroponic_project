@@ -4,7 +4,7 @@ FROM python:3.10-slim
 # Çalışma dizini
 WORKDIR /app
 
-# OpenCV ve YOLO için gerekli sistem kütüphaneleri (2026 uyumlu)
+# Sistem bağımlılıkları (trixie sürümü için güncellenmiş paket isimleri)
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -13,11 +13,11 @@ RUN apt-get update && apt-get install -y \
     libxrender1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Gereksinimleri kopyala ve kur
+# Önce sadece gereksinimleri kopyala (Cache avantajı sağlar)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Tüm dosyaları kopyala
+# Projenin kalan tüm dosyalarını kopyala
 COPY . .
 
 # Uygulamayı 8000 portundan aç
