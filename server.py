@@ -28,6 +28,7 @@ async def lifespan(app: FastAPI):
     # Uygulama kapanırken çalışacak kodlar
     print("❌ Sistem kapatılıyor...")
 
+
 # Uygulamayı yeni lifespan yapısıyla ayağa kaldır
 app = FastAPI(lifespan=lifespan)
 
@@ -44,6 +45,9 @@ latest_sensor_data = {
     "ph": 0.0,
     "ec": 0.0,
     "temp": 0.0,
+    "water_temp": 0.0,
+    "air_temp": 0.0,
+    "co2": 0.0,
     "humidity": 0,
     "water_level": 0,
     "status": "BULUT MODU" if IS_CLOUD else "BAŞLATILIYOR"
@@ -95,6 +99,9 @@ def serial_worker():
                         "ph": clean_val(d.get("PH", 0)),
                         "ec": clean_val(d.get("TDS", 0)),
                         "temp": clean_val(d.get("WT", 25.0)),
+                        "water_temp": clean_val(d.get("WT", 25.0)),
+                        "air_temp": clean_val(d.get("AT", 0)),
+                        "co2": clean_val(d.get("CO2", 0)),
                         "humidity": int(clean_val(d.get("H", 0))),
                         "water_level": int(clean_val(d.get("WL", 0))),
                         "status": "AKTİF"
@@ -120,9 +127,48 @@ async def update_sensors(data: dict):
     return {"status": "ignored_local"}
 
 # 404 HATASINI ÇÖZEN KISIM: Arayüzden gelen frame/0 veya frame/2 isteklerini yakalar
+# Frame cache untuk single frame polling
+last_frame_cache = {0: None, 2: None}
+last_frame_mutex = threading.Lock()
+
+def cache_frames_worker(camera_id):
+    """Background worker yang terus-menerus frame cache'e yeni frame ekler"""
+    while True:
+        try:
+            for frame_data in gen_frames(camera_id=camera_id):
+                try:
+                    # Extract JPEG dari multipart response
+                    start = frame_data.find(b'\xff\xd8')
+                    end = frame_data.find(b'\xff\xd9')
+                    if start >= 0 and end > start:
+                        jpeg_bytes = frame_data[start:end+2]
+                        with last_frame_mutex:
+                            last_frame_cache[camera_id] = jpeg_bytes
+                except:
+                    pass
+        except Exception as e:
+            print(f"Cache worker error for camera {camera_id}: {e}")
+            time.sleep(1)
+
+# Start frame cache threads during startup
+for cam_id in [0, 2]:
+    threading.Thread(target=cache_frames_worker, args=(cam_id,), daemon=True).start()
+
 @app.get('/api/frame/{camera_id}')
 def get_frame(camera_id: int):
-    return StreamingResponse(gen_frames(camera_id=camera_id), media_type='multipart/x-mixed-replace; boundary=frame')
+    """Get latest cached frame as single JPEG"""
+    with last_frame_mutex:
+        frame_data = last_frame_cache.get(camera_id)
+    
+    if frame_data:
+        return Response(content=frame_data, media_type="image/jpeg")
+    
+    # If no cache yet, return a placeholder
+    frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    cv2.putText(frame, f"Camera {camera_id} - Loading...", (120, 240),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    ret, buffer = cv2.imencode('.jpg', frame)
+    return Response(content=buffer.tobytes(), media_type="image/jpeg")
 
 @app.get('/api/video_feed')
 def video_feed():

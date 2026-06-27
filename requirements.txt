@@ -46,3 +46,5 @@ ultralytics==8.4.21
 ultralytics-thop==2.0.18
 urllib3==2.6.3
 uvicorn==0.41.0
+
+azure-iot-device>=2.12.0

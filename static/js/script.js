@@ -3,7 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sensorElements = {
         ph: document.getElementById('ph-val'),
         ec: document.getElementById('ec-val'),
-        temp: document.getElementById('temp-val'),
+        water_temp: document.getElementById('temp-val'),
+        air_temp: document.getElementById('air-temp-val'),
+        co2: document.getElementById('co2-val'),
         humidity: document.getElementById('hum-val'),
         pump: document.getElementById('pump-status'),
         water: document.getElementById('water-level')
@@ -36,8 +38,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sensorElements.ec && data.ec !== undefined) {
                 sensorElements.ec.textContent = parseFloat(data.ec).toFixed(2);
             }
-            if (sensorElements.temp && data.temp !== undefined) {
-                sensorElements.temp.textContent = parseFloat(data.temp).toFixed(1);
+            if (sensorElements.water_temp && data.water_temp !== undefined) {
+                sensorElements.water_temp.textContent = parseFloat(data.water_temp).toFixed(1);
+            }
+            if (sensorElements.air_temp && data.air_temp !== undefined) {
+                sensorElements.air_temp.textContent = parseFloat(data.air_temp).toFixed(1);
+            }
+            if (sensorElements.co2 && data.co2 !== undefined) {
+                sensorElements.co2.textContent = parseFloat(data.co2).toFixed(0);
             }
             if (sensorElements.humidity && data.humidity !== undefined) {
                 sensorElements.humidity.textContent = parseFloat(data.humidity).toFixed(0);
