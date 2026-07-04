@@ -4,7 +4,6 @@ from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from ultralytics import YOLO
 import cv2
 import os, serial, threading, time, math, base64, numpy as np
 from datetime import datetime
@@ -58,9 +57,12 @@ model_loaded = False
 
 def get_model():
     global model, model_loaded
+    if IS_CLOUD:
+        return None  # Bulutta YOLO yok (torch/ultralytics kurulu değil)
     if not model_loaded and os.path.exists(MODEL_PATH):
         try:
             print("🤖 YOLO modeli yükleniyor...")
+            from ultralytics import YOLO  # Lazy import: sadece Jetson'da yüklenir
             model = YOLO(MODEL_PATH)
             model_loaded = True
             print("✅ YOLO modeli yüklendi")
@@ -126,6 +128,26 @@ async def update_sensors(data: dict):
         return {"status": "success"}
     return {"status": "ignored_local"}
 
+@app.post("/ingest")
+async def ingest(data: dict):
+    """Jetson edge gateway'in (main.py) gönderdiği payload'ı kabul eder.
+    Edge anahtarlarını (water_temperature, tds, ...) dashboard formatına çevirir."""
+    global latest_sensor_data
+    wt = clean_val(data.get("water_temperature", 0))
+    latest_sensor_data.update({
+        "ph": clean_val(data.get("ph", 0)),
+        "ec": clean_val(data.get("tds", 0)),
+        "temp": wt,
+        "water_temp": wt,
+        "air_temp": clean_val(data.get("air_temperature", 0)),
+        "co2": clean_val(data.get("co2", 0)),
+        "humidity": int(clean_val(data.get("humidity", 0))),
+        "water_level": 1 if data.get("water_level_low") else 0,
+        "status": "JETSON'DAN GELDİ",
+        "last_update": datetime.now().isoformat(),
+    })
+    return {"status": "success"}
+
 # 404 HATASINI ÇÖZEN KISIM: Arayüzden gelen frame/0 veya frame/2 isteklerini yakalar
 # Frame cache untuk single frame polling
 last_frame_cache = {0: None, 2: None}
@@ -150,9 +172,10 @@ def cache_frames_worker(camera_id):
             print(f"Cache worker error for camera {camera_id}: {e}")
             time.sleep(1)
 
-# Start frame cache threads during startup
-for cam_id in [0, 2]:
-    threading.Thread(target=cache_frames_worker, args=(cam_id,), daemon=True).start()
+# Start frame cache threads during startup (sadece yerelde; bulutta kamera yok)
+if not IS_CLOUD:
+    for cam_id in [0, 2]:
+        threading.Thread(target=cache_frames_worker, args=(cam_id,), daemon=True).start()
 
 @app.get('/api/frame/{camera_id}')
 def get_frame(camera_id: int):

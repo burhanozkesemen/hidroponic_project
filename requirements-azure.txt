@@ -1,0 +1,11 @@
+# Azure App Service (Code deploy) için hafif bağımlılıklar.
+# torch/ultralytics YOK — bulut modunda YOLO çalışmıyor, Free tier'a sığmaz.
+# GitHub Actions workflow'u bu dosyayı deploy paketinde requirements.txt olarak kullanır.
+fastapi==0.135.1
+uvicorn==0.41.0
+gunicorn==23.0.0
+python-multipart==0.0.22
+numpy==2.2.6
+opencv-python-headless
+pyserial==3.5
+requests==2.32.5
