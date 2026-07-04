@@ -391,7 +391,6 @@ body {
   grid-row: 2;
   grid-column: 1;
 }
-}
 
 /* ===== CAMERA LOADING ===== */
 .camera-loading {
@@ -689,18 +688,88 @@ body {
   }
 }
 
+/* Mobil: kenar çubuğu üstte yatay menüye dönüşür */
 @media (max-width: 768px) {
+  body {
+    flex-direction: column;
+  }
+
   .sidebar {
-    width: 220px;
-    padding: 20px 15px;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: auto;
+    padding: 12px 15px;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: visible;
   }
 
   .dashboard-container {
-    margin-left: 220px;
+    margin-left: 0;
+  }
+
+  .logo {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    font-size: 1.15rem;
+    justify-content: center;
+  }
+
+  .logo i {
+    font-size: 1.3rem;
+  }
+
+  .menu ul {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .menu li {
+    margin-bottom: 0;
+    flex: 1 0 auto;
+  }
+
+  .menu a {
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .menu a:hover {
+    transform: none;
+  }
+
+  /* Durum göstergeleri mobilde tek satır */
+  .system-status {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding-top: 10px;
+    margin-top: 8px;
+  }
+
+  .system-status .status-item {
+    margin-bottom: 0;
+    gap: 6px;
+    font-size: 0.75rem;
+  }
+
+  .system-status small {
+    display: none !important;
   }
 
   .main-content {
-    padding: 20px;
+    padding: 16px;
+  }
+
+  .header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
   }
 
   .header h1 {
@@ -708,7 +777,16 @@ body {
   }
 
   .grid-sensors {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .card .value {
+    font-size: 1.6rem;
   }
 
   .camera-feeds-container {
@@ -716,7 +794,12 @@ body {
   }
 
   .camera-feed {
-    height: 350px;
+    height: 300px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 0.85rem;
   }
 
   .history-table th,
@@ -727,21 +810,8 @@ body {
 }
 
 @media (max-width: 480px) {
-  .sidebar {
-    width: 180px;
-    padding: 15px 10px;
-  }
-
-  .dashboard-container {
-    margin-left: 180px;
-  }
-
   .main-content {
-    padding: 15px;
-  }
-
-  .header {
-    margin-bottom: 20px;
+    padding: 12px;
   }
 
   .header h1 {
@@ -749,20 +819,25 @@ body {
   }
 
   .card {
-    padding: 16px;
+    padding: 12px;
   }
 
-  .btn {
-    padding: 10px 16px;
-    font-size: 0.85rem;
+  .card h3 {
+    font-size: 0.75rem;
   }
 
-  .menu a {
-    padding: 10px 12px;
-    font-size: 0.85rem;
+  .card .value {
+    font-size: 1.4rem;
   }
 
-  .menu i {
-    font-size: 0.95rem;
+  .camera-feed {
+    height: 240px;
+  }
+
+  .camera-overlay {
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    top: 10px;
+    left: 10px;
   }
 }

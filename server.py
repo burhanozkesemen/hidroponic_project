@@ -151,7 +151,20 @@ async def ingest(data: dict):
 # 404 HATASINI ÇÖZEN KISIM: Arayüzden gelen frame/0 veya frame/2 isteklerini yakalar
 # Frame cache untuk single frame polling
 last_frame_cache = {0: None, 2: None}
+last_frame_time = {}  # camera_id -> son yükleme zamanı (bulut modu için)
+FRAME_MAX_AGE = 60  # saniye; bundan eskiyse "sinyal yok" göster
 last_frame_mutex = threading.Lock()
+
+@app.post("/api/upload-frame/{camera_id}")
+async def upload_frame(camera_id: int, request: Request):
+    """Jetson'dan gelen JPEG karesini kabul eder (bulut modu)."""
+    body = await request.body()
+    if not body or not body.startswith(b'\xff\xd8'):
+        raise HTTPException(status_code=400, detail="Geçerli JPEG verisi değil")
+    with last_frame_mutex:
+        last_frame_cache[camera_id] = body
+        last_frame_time[camera_id] = time.time()
+    return {"status": "success", "bytes": len(body)}
 
 def cache_frames_worker(camera_id):
     """Background worker yang terus-menerus frame cache'e yeni frame ekler"""
@@ -182,13 +195,16 @@ def get_frame(camera_id: int):
     """Get latest cached frame as single JPEG"""
     with last_frame_mutex:
         frame_data = last_frame_cache.get(camera_id)
-    
-    if frame_data:
+        frame_age = time.time() - last_frame_time.get(camera_id, 0)
+
+    # Bulutta eski kareyi sonsuza dek gösterme; Jetson kapalıysa uyar
+    if frame_data and (not IS_CLOUD or frame_age < FRAME_MAX_AGE):
         return Response(content=frame_data, media_type="image/jpeg")
-    
+
     # If no cache yet, return a placeholder
+    msg = f"Camera {camera_id} - No Signal" if frame_data else f"Camera {camera_id} - Loading..."
     frame = np.zeros((480, 640, 3), dtype=np.uint8)
-    cv2.putText(frame, f"Camera {camera_id} - Loading...", (120, 240),
+    cv2.putText(frame, msg, (120, 240),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
     ret, buffer = cv2.imencode('.jpg', frame)
     return Response(content=buffer.tobytes(), media_type="image/jpeg")
